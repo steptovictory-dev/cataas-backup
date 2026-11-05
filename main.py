@@ -1,5 +1,11 @@
-from urllib.parse import quote
 import requests
+import os
+
+from urllib.parse import quote
+from getpass import getpass
+from dotenv import load_dotenv  
+
+token = os.getenv('TOKEN')
 
 class Cataas:
     base_url = 'https://cataas.com'
@@ -25,3 +31,17 @@ class YandexDisk:
                 timeout=15,
         )
         response.raise_for_status()
+
+if __name__ == '__main__':
+    load_dotenv()  
+
+    token = os.getenv('TOKEN', '').strip()
+    if not token:
+        token = getpass('Введите токен Яндекс.Диска: ').strip()
+    
+    if not token:
+        raise SystemExit('Токен не указан')
+
+    disk = YandexDisk(token)
+    disk.create_folder('AIEPYAPI-162')  # создаем папку по названию группы 
+    print('Папка создана')
