@@ -32,6 +32,16 @@ class YandexDisk:
         )
         response.raise_for_status()
 
+    def upload_from_url(self, image_url: str, disk_path: str) -> dict:
+        response = requests.post(f'{self.base_url}/v1/disk/resources/upload', 
+                headers=self.headers, 
+                params={'url': image_url, 'path': disk_path},
+                timeout=15,
+        )
+        response.raise_for_status()
+        return response.json()
+
+
 if __name__ == '__main__':
     load_dotenv()  
 
@@ -43,5 +53,9 @@ if __name__ == '__main__':
         raise SystemExit('Токен не указан')
 
     disk = YandexDisk(token)
-    disk.create_folder('AIEPYAPI-162')  # создаем папку по названию группы 
-    print('Папка создана')
+    # disk.create_folder('AIEPYAPI-162')  # создаем папку по названию группы 
+    # print('Папка создана')
+
+
+result = disk.upload_from_url('https://cataas.com/cat/says/Hello', 'AIEPYAPI-162/hello.jpg')
+print(result)
