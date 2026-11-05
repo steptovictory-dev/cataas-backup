@@ -56,6 +56,13 @@ if __name__ == '__main__':
     # disk.create_folder('AIEPYAPI-162')  # создаем папку по названию группы 
     # print('Папка создана')
 
+    text = input('Введите текст для надписи на картинке: ').strip()
+    if not text:
+        raise SystemExit('Текст не указан')
 
-result = disk.upload_from_url('https://cataas.com/cat/says/Hello', 'AIEPYAPI-162/hello.jpg')
+    encoded_text = quote(text, safe='')
+    image_url = f'{Cataas.base_url}/cat/says/{encoded_text}'
+    disk_path = f'AIEPYAPI-162/{text}.jpg'
+    
+result = disk.upload_from_url(image_url, disk_path)
 print(result)
