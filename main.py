@@ -26,13 +26,16 @@ class YandexDisk:
     def __init__(self, token: str):
         self.headers = {'Authorization': f'OAuth {token}'}
 
-    def create_folder(self, folder_path: str) -> None:
+    def create_folder(self, folder_path: str) -> bool:
         response = requests.put(f'{self.base_url}/v1/disk/resources', 
                 headers=self.headers, 
                 params={'path': folder_path},
                 timeout=15,
         )
-        response.raise_for_status()
+        if response.status_code == 409:
+            return response.json().get('error') == 'DiskPathPointsToExistentDirectoryError'
+        
+        return response.status_code in {201, 409}
 
     def upload_from_url(self, image_url: str, disk_path: str) -> dict:
         response = requests.post(f'{self.base_url}/v1/disk/resources/upload', 
@@ -68,7 +71,6 @@ class YandexDisk:
         return response.json()['size']  
 
 
-
 if __name__ == '__main__':
     load_dotenv()  
 
@@ -80,13 +82,15 @@ if __name__ == '__main__':
         raise SystemExit('Токен не указан')
 
     disk = YandexDisk(token)
-    # disk.create_folder('AIEPYAPI-162')  # создаем папку по названию группы 
-    # print('Папка создана')
+
+    if not disk.create_folder('AIEPYAPI-162'):
+        raise SystemExit('Не удалось создать папку на Яндекс.Диске')
+    print('Папка создана')
 
     text = input('Введите текст для надписи на картинке: ').strip()
     if not text:
         raise SystemExit('Текст не указан')
-
+           
     encoded_text = quote(text, safe='')
     image_url = f'{Cataas.base_url}/cat/says/{encoded_text}'
     disk_path = f'AIEPYAPI-162/{text}.jpg'
