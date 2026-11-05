@@ -1,6 +1,8 @@
 import requests
 import os
+import json
 
+from time import sleep
 from urllib.parse import quote
 from getpass import getpass
 from dotenv import load_dotenv  
@@ -41,6 +43,31 @@ class YandexDisk:
         response.raise_for_status()
         return response.json()
 
+    def wait_for_upload(self, operation_url: str) -> None:
+        for _ in range(20):  
+            response = requests.get(operation_url, headers=self.headers, timeout=15)
+            response.raise_for_status()
+            status = response.json()['status']
+
+            if status == 'success':
+                return
+            elif status == 'failed':
+                raise SystemExit('Ошибка загрузки файла на Яндекс.Диск') 
+
+            sleep(1)
+
+        raise TimeoutError('Превышено время ожидания загрузки файла')
+
+    def get_file_size(self, disk_path: str) -> int:
+        response = requests.get(f'{self.base_url}/v1/disk/resources', 
+                headers=self.headers, 
+                params={'path': disk_path},
+                timeout=15,
+        )
+        response.raise_for_status()
+        return response.json()['size']  
+
+
 
 if __name__ == '__main__':
     load_dotenv()  
@@ -64,5 +91,13 @@ if __name__ == '__main__':
     image_url = f'{Cataas.base_url}/cat/says/{encoded_text}'
     disk_path = f'AIEPYAPI-162/{text}.jpg'
     
-result = disk.upload_from_url(image_url, disk_path)
-print(result)
+    result = disk.upload_from_url(image_url, disk_path)
+
+    disk.wait_for_upload(result['href'])
+    size = disk.get_file_size(disk_path)
+
+    report = [{'file_name': f'{text}.jpg', 'size': size}]
+    with open('result.json', 'w', encoding='utf-8') as file:
+        json.dump(report, file, ensure_ascii=False, indent=4)
+
+    print('картинка загружена на Яндекс Диск, отчет сохранен в result.json')
