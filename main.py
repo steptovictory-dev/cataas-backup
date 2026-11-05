@@ -67,7 +67,7 @@ class YandexDisk:
         return response.json()['size']  
 
 
-if __name__ == '__main__':
+def main() -> None:
     load_dotenv()  
 
     token = os.getenv('TOKEN', '').strip()
@@ -101,3 +101,6 @@ if __name__ == '__main__':
         json.dump(report, file, ensure_ascii=False, indent=4)
 
     print('картинка загружена на Яндекс Диск, отчет сохранен в result.json')
+
+if __name__ == '__main__':
+    main()
