@@ -12,13 +12,9 @@ token = os.getenv('TOKEN')
 class Cataas:
     base_url = 'https://cataas.com'
 
-    def get_image(self, text: str) -> bytes:
+    def get_image(self, text: str) -> str:
         encoded_text = quote(text, safe='')
-        url = f'{self.base_url}/cat/says/{encoded_text}'
-
-        response = requests.get(url, timeout=15)
-        response.raise_for_status()
-        return response.content
+        return f'{self.base_url}/cat/says/{encoded_text}'
 
 class YandexDisk:
     base_url = 'https://cloud-api.yandex.net'
@@ -91,8 +87,8 @@ if __name__ == '__main__':
     if not text:
         raise SystemExit('Текст не указан')
            
-    encoded_text = quote(text, safe='')
-    image_url = f'{Cataas.base_url}/cat/says/{encoded_text}'
+    cataas = Cataas()
+    image_url = cataas.get_image(text)
     disk_path = f'AIEPYAPI-162/{text}.jpg'
     
     result = disk.upload_from_url(image_url, disk_path)
