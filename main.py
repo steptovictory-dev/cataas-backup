@@ -1,13 +1,13 @@
 import requests
 import os
 import json
+import logging
 
 from time import sleep
 from urllib.parse import quote
 from getpass import getpass
 from dotenv import load_dotenv  
 
-token = os.getenv('TOKEN')
 
 class Cataas:
     base_url = 'https://cataas.com'
@@ -68,6 +68,7 @@ class YandexDisk:
 
 
 def main() -> None:
+    logging.basicConfig(level=logging.INFO, format='%(message)s')
     load_dotenv()  
 
     token = os.getenv('TOKEN', '').strip()
@@ -81,7 +82,8 @@ def main() -> None:
 
     if not disk.create_folder('AIEPYAPI-162'):
         raise SystemExit('Не удалось создать папку на Яндекс.Диске')
-    print('Папка создана')
+    
+    logging.info('Папка на Яндекс.Диске готова')
 
     text = input('Введите текст для надписи на картинке: ').strip()
     if not text:
@@ -90,7 +92,9 @@ def main() -> None:
     cataas = Cataas()
     image_url = cataas.get_image(text)
     disk_path = f'AIEPYAPI-162/{text}.jpg'
-    
+
+    logging.info(f'Загрузка картинки с надписью "{text}" на Яндекс.Диск...')
+
     result = disk.upload_from_url(image_url, disk_path)
 
     disk.wait_for_upload(result['href'])
@@ -100,7 +104,8 @@ def main() -> None:
     with open('result.json', 'w', encoding='utf-8') as file:
         json.dump(report, file, ensure_ascii=False, indent=4)
 
-    print('картинка загружена на Яндекс Диск, отчет сохранен в result.json')
+    logging.info('Картинка загружена на Яндекс Диск, отчет сохранен в result.json')
+
 
 if __name__ == '__main__':
     main()
