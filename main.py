@@ -10,14 +10,22 @@ from dotenv import load_dotenv
 
 
 class Cataas:
+    """Формирует ссылку на картинку котиков с заданной надписью."""
+
     base_url = 'https://cataas.com'
 
     def get_image_url(self, text: str) -> str:
+        # Кодируем надпись, чтобы не сломать URL
         encoded_text = quote(text, safe='')
         return f'{self.base_url}/cat/says/{encoded_text}'
 
 
 class YandexDisk:
+    """
+    Класс для работы с Яндекс.Диском через API.
+    Создает папку, загружает картинку по ссылке и получает её размер.
+    """
+
     base_url = 'https://cloud-api.yandex.net'
 
     def __init__(self, token: str):
@@ -30,9 +38,15 @@ class YandexDisk:
             params={'path': folder_path},
             timeout=15,
         )
-        if response.status_code == 409:
-            return response.json().get('error') == 'DiskPathPointsToExistentDirectoryError'
 
+        # 409 = Conflict. Проверяем, что папка уже существует
+        if response.status_code == 409:
+            return (
+                response.json().get('error')
+                == 'DiskPathPointsToExistentDirectoryError'
+            )
+
+        # 201 = Created. Папка успешно создана
         return response.status_code in {201, 409}
 
     def upload_from_url(self, image_url: str, disk_path: str) -> dict:
@@ -87,7 +101,7 @@ def main() -> None:
         raise SystemExit('Токен не указан')
 
     disk = YandexDisk(token)
-    folder_name = 'AIEPYAPI-162'
+    folder_name = 'AIEPYAPI-162'    # имя папки по номеру группы
 
     if not disk.create_folder(folder_name):
         raise SystemExit('Не удалось создать папку на Яндекс.Диске')
@@ -105,6 +119,7 @@ def main() -> None:
     logging.info(f'Загрузка картинки с надписью "{text}" на Яндекс.Диск...')
     result = disk.upload_from_url(image_url, disk_path)
 
+    # Ждем завершения загрузки файла на Яндекс.Диск
     disk.wait_for_upload(result['href'])
     size = disk.get_file_size(disk_path)
 
