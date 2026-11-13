@@ -49,6 +49,20 @@ class YandexDisk:
         # 201 = Created. Папка успешно создана
         return response.status_code in {201, 409}
 
+    def path_exists(self, disk_path: str) -> bool:
+        response = requests.get(
+            f'{self.base_url}/v1/disk/resources',
+            headers=self.headers,
+            params={'path': disk_path},
+            timeout=15,
+        )
+        if response.status_code == 404:
+            return False
+
+        response.raise_for_status()
+        return True
+
+
     def upload_from_url(self, image_url: str, disk_path: str) -> dict:
         response = requests.post(
             f'{self.base_url}/v1/disk/resources/upload',
@@ -116,6 +130,10 @@ def main() -> None:
     image_url = cataas.get_image_url(text)
     disk_path = f'{folder_name}/{text}.jpg'
 
+    if disk.path_exists(disk_path):
+        logging.info('Файл уже есть на Яндекс.Диске: %s', disk_path)
+        return
+
     logging.info(f'Загрузка картинки с надписью "{text}" на Яндекс.Диск...')
     result = disk.upload_from_url(image_url, disk_path)
 
@@ -131,4 +149,7 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as exc:
+        print(exc)
